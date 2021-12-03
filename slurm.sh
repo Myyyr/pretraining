@@ -19,7 +19,7 @@ module load cuda/10.1.2
 module load python/3.7.10
 
 
-DATA="data/imagenet"
+DATA="/gpfsscratch/rech/arf/unm89rb/imagenet"
 CONFIG="configs/swin_tiny_patch4_window7_224.yaml"
 
 
