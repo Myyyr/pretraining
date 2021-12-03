@@ -13,7 +13,7 @@
 set -x
 
 
-cd $WORK/transseg2d
+cd $WORK/pretraining
 module purge
 module load cuda/10.1.2
 module load python/3.7.10
