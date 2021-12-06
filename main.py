@@ -81,8 +81,8 @@ def parse_option():
 
 
 def main(config):
-    init_dist("slurm")
-    config.LOCAL_RANK = torch.cuda.current_device()
+    # init_dist("slurm")
+    # config.LOCAL_RANK = torch.cuda.current_device()
 
     dataset_train, dataset_val, data_loader_train, data_loader_val, mixup_fn = build_loader(config)
 
@@ -94,8 +94,8 @@ def main(config):
     optimizer = build_optimizer(config, model)
     if config.AMP_OPT_LEVEL != "O0":
         model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL)
-    # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[config.LOCAL_RANK], broadcast_buffers=False)
-    model = torch.nn.parallel.MMDistributedDataParallel(model, device_ids=[torch.cuda.current_device()], broadcast_buffers=False)
+    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[config.LOCAL_RANK], broadcast_buffers=False)
+    # model = torch.nn.parallel.MMDistributedDataParallel(model, device_ids=[torch.cuda.current_device()], broadcast_buffers=False)
     model_without_ddp = model.module
 
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -307,6 +307,7 @@ def throughput(data_loader, model, logger):
 
 
 if __name__ == '__main__':
+    init_dist("slurm")
     _, config = parse_option()
 
     if config.AMP_OPT_LEVEL != "O0":
@@ -320,21 +321,21 @@ if __name__ == '__main__':
         rank = -1
         world_size = -1
     torch.cuda.set_device(config.LOCAL_RANK)
-    torch.distributed.init_process_group(backend='nccl', init_method='env://', world_size=8, rank=0)
+    torch.distributed.init_process_group(backend='nccl', init_method='env://', world_size=world_size, rank=rank)
     torch.distributed.barrier()
 
-    seed = config.SEED #+ dist.get_rank()
+    seed = config.SEED + dist.get_rank()
     torch.manual_seed(seed)
     np.random.seed(seed)
     cudnn.benchmark = True
 
-    # linear scale the learning rate according to total batch size, may not be optimal
-    # linear_scaled_lr = config.TRAIN.BASE_LR * config.DATA.BATCH_SIZE * dist.get_world_size() / 512.0
-    # linear_scaled_warmup_lr = config.TRAIN.WARMUP_LR * config.DATA.BATCH_SIZE * dist.get_world_size() / 512.0
-    # linear_scaled_min_lr = config.TRAIN.MIN_LR * config.DATA.BATCH_SIZE * dist.get_world_size() / 512.0
-    linear_scaled_lr = config.TRAIN.BASE_LR * config.DATA.BATCH_SIZE / 512.0
-    linear_scaled_warmup_lr = config.TRAIN.WARMUP_LR * config.DATA.BATCH_SIZE / 512.0
-    linear_scaled_min_lr = config.TRAIN.MIN_LR * config.DATA.BATCH_SIZE / 512.0
+    linear scale the learning rate according to total batch size, may not be optimal
+    linear_scaled_lr = config.TRAIN.BASE_LR * config.DATA.BATCH_SIZE * dist.get_world_size() / 512.0
+    linear_scaled_warmup_lr = config.TRAIN.WARMUP_LR * config.DATA.BATCH_SIZE * dist.get_world_size() / 512.0
+    linear_scaled_min_lr = config.TRAIN.MIN_LR * config.DATA.BATCH_SIZE * dist.get_world_size() / 512.0
+    # linear_scaled_lr = config.TRAIN.BASE_LR * config.DATA.BATCH_SIZE / 512.0
+    # linear_scaled_warmup_lr = config.TRAIN.WARMUP_LR * config.DATA.BATCH_SIZE / 512.0
+    # linear_scaled_min_lr = config.TRAIN.MIN_LR * config.DATA.BATCH_SIZE / 512.0
     # gradient accumulation also need to scale the learning rate
     if config.TRAIN.ACCUMULATION_STEPS > 1:
         linear_scaled_lr = linear_scaled_lr * config.TRAIN.ACCUMULATION_STEPS
