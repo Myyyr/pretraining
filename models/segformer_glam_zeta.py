@@ -377,7 +377,7 @@ class SegFormerGTZeta(nn.Module):
         self.norm4 = mix.norm4
 
         self.avgpool = nn.AdaptiveAvgPool1d(1)
-        self.head = nn.Linear(self.num_features, num_classes) if num_classes > 0 else nn.Identity()
+        self.head = nn.Linear(self.embed_dims[3], 1000)
 
     def forward_features(self, x):
         B = x.shape[0]
