@@ -15,6 +15,8 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 
+from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
+
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 from timm.utils import accuracy, AverageMeter
 
@@ -70,6 +72,9 @@ def parse_option():
 
     args, unparsed = parser.parse_known_args()
 
+    if 'LOCAL_RANK' not in os.environ:
+        os.environ['LOCAL_RANK'] = str(args.local_rank)
+
     config = get_config(args)
 
     return args, config
@@ -89,7 +94,8 @@ def main(config):
     optimizer = build_optimizer(config, model)
     if config.AMP_OPT_LEVEL != "O0":
         model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL)
-    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[config.LOCAL_RANK], broadcast_buffers=False)
+    # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[config.LOCAL_RANK], broadcast_buffers=False)
+    model = torch.nn.parallel.MMDistributedDataParallel(model, device_ids=[torch.cuda.current_device()], broadcast_buffers=False)
     model_without_ddp = model.module
 
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
