@@ -20,7 +20,8 @@ module load python/3.7.10
 
 
 DATA="/gpfsscratch/rech/arf/unm89rb/imagenet"
-CONFIG="configs/swin_tiny_patch4_window7_224.yaml"
+# CONFIG="configs/swin_tiny_patch4_window7_224.yaml"
+CONFIG="configs/glam_segformer_patch4_window7_224.yaml"
 
 
 
