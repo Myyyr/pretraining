@@ -26,6 +26,8 @@ from optimizer import build_optimizer
 from logger import create_logger
 from utils import load_checkpoint, save_checkpoint, get_grad_norm, auto_resume_helper, reduce_tensor
 
+from mmcv.runner import init_dist
+
 try:
     # noinspection PyUnresolvedReferences
     from apex import amp
@@ -74,6 +76,8 @@ def parse_option():
 
 
 def main(config):
+    init_dist("slurm")
+    
     dataset_train, dataset_val, data_loader_train, data_loader_val, mixup_fn = build_loader(config)
 
     logger.info(f"Creating model:{config.MODEL.TYPE}/{config.MODEL.NAME}")
