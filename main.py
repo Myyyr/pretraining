@@ -323,7 +323,7 @@ if __name__ == '__main__':
     # torch.distributed.init_process_group(backend='nccl', init_method='env://', world_size=world_size, rank=rank)
     # torch.distributed.barrier()
 
-    seed = config.SEED + dist.get_rank()
+    seed = config.SEED #+ dist.get_rank()
     torch.manual_seed(seed)
     np.random.seed(seed)
     cudnn.benchmark = True
