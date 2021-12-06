@@ -320,6 +320,8 @@ class SegFormerGTZeta(nn.Module):
         self.pe4 = nn.Parameter(torch.zeros(ws_pe[0]*ws_pe[1], self.embed_dims[3]))
         trunc_normal_(self.pe4, std=.02)
 
+        self.init_weights()
+
 
 
     def init_weights(self, pretrained=None):
