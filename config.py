@@ -83,6 +83,10 @@ _C.MODEL.SWIN_MLP.MLP_RATIO = 4.
 _C.MODEL.SWIN_MLP.APE = False
 _C.MODEL.SWIN_MLP.PATCH_NORM = True
 
+#GLAM SEGFORMER
+_C.MODEL.GLAM = CN()
+_C.MODEL.GLAM.GT_NUM = 1
+
 # -----------------------------------------------------------------------------
 # Training settings
 # -----------------------------------------------------------------------------
