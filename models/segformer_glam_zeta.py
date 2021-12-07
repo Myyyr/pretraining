@@ -174,9 +174,16 @@ class Attention(nn.Module):
             #     gt = repeat(gt, "g c -> b g c", b=B)# shape of (num_windows*B, G, C)
             nHg, nWg = gt.shape[1], gt.shape[2]
             nHp, nWp = Hp//self.window_size[0], Wp//self.window_size[1]
-            if nHg != nHp or nWg != nWp:
-                gt = rearrange(nn.functional.interpolate(rearrange(gt, 'b h w g c -> b g c h w'), size=(nHp, nWp) ), 'b g c h w -> b h w g c')
-            gt = rearrange(gt, 'b h w g c -> (b h w) g c')
+            # if nHg != nHp or nWg != nWp:
+            #     gt = rearrange(nn.functional.interpolate(rearrange(gt, 'b h w g c -> b g c h w'), size=(nHp, nWp) ), 'b g c h w -> b h w g c')
+            # gt = rearrange(gt, 'b h w g c -> (b h w) g c')
+            if (len(gt.shape) > 3):
+                if (nHg != nHp or nWg != nWp):
+                    ngt=gt.shape[3]
+                    gt = rearrange(gt, 'b h w g c -> (b g) c h w')
+                    gt = nn.functional.interpolate(gt, size=(nHp, nWp))
+                    gt = rearrange(gt, '(b g) c h w -> b h w g c', g=ngt)
+                gt = rearrange(gt, 'b h w g c -> (b h w) g c')
             skip = gt
 
             x_windows = torch.cat([gt, x_windows], dim=1)
@@ -383,11 +390,11 @@ class SegFormerGTZeta(nn.Module):
         B = x.shape[0]
         outs = []
 
-        print("\n\n\n--------INFO--------")
-        print(x.shape)
+        # print("\n\n\n--------INFO--------")
+        # print(x.shape)
         # stage 1
         x, H, W = self.patch_embed1(x)
-        print(x.shape)
+        # print(x.shape)
         gt = self.global_token1
         gt = repeat(gt, 'h w g c -> b h w g c', b=B)
         for i, blk in enumerate(self.block1):
@@ -398,7 +405,7 @@ class SegFormerGTZeta(nn.Module):
 
         # stage 2
         x, H, W = self.patch_embed2(x)
-        print(x.shape)
+        # print(x.shape)
         gt = self.global_token2
         gt = repeat(gt, 'h w g c -> b h w g c', b=B)
         for i, blk in enumerate(self.block2):
@@ -409,7 +416,7 @@ class SegFormerGTZeta(nn.Module):
 
         # stage 3
         x, H, W = self.patch_embed3(x)
-        print(x.shape)
+        # print(x.shape)
         gt = self.global_token3
         gt = repeat(gt, 'h w g c -> b h w g c', b=B)
         for i, blk in enumerate(self.block3):
@@ -420,7 +427,7 @@ class SegFormerGTZeta(nn.Module):
 
         # stage 4
         x, H, W = self.patch_embed4(x)
-        print(x.shape)
+        # print(x.shape)
         gt = self.global_token4
         gt = repeat(gt, 'h w g c -> b h w g c', b=B)
         for i, blk in enumerate(self.block4):
@@ -429,8 +436,8 @@ class SegFormerGTZeta(nn.Module):
         x = x.reshape(B, H, W, -1).permute(0, 3, 1, 2).contiguous()
         outs.append(x)
 
-        print(x.shape)
-        print("--------------------\n\n\n")
+        # print(x.shape)
+        # print("--------------------\n\n\n")
         return outs
 
     def forward(self, x):
