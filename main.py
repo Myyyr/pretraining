@@ -179,6 +179,9 @@ def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mix
         outputs = model(samples)
 
         if config.TRAIN.ACCUMULATION_STEPS > 1:
+            print("\n\n\n\n\n ACC STEP", config.TRAIN.ACCUMULATION_STEPS)
+            print("\n\n\n\n\n")
+            exit(0)
             loss = criterion(outputs, targets)
             loss = loss / config.TRAIN.ACCUMULATION_STEPS
             if config.AMP_OPT_LEVEL != "O0":
