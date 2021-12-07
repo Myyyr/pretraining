@@ -442,10 +442,13 @@ class SegFormerGTZeta(nn.Module):
         x = self.forward_features(x)
         print("\n\n\n--------------------")
         print(x[-1].shape)
-        print("--------------------\n\n\n")
 
         x = self.avgpool(x[-1].transpose(1, 2))  # B C 1
+        print(x.shape)
         x = torch.flatten(x, 1)
+        print(x.shape)
+        print("emb", self.embed_dims[3])
+        print("--------------------\n\n\n")
         x = self.head(x)
 
         return x
