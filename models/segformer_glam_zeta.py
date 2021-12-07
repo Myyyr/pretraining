@@ -143,7 +143,7 @@ class Attention(nn.Module):
         self.proj = attn.proj
         self.proj_drop = attn.proj_drop
 
-        self.sr_ratio = attn.sr_ratio
+        self.sr_ratio = 1#attn.sr_ratio
         if self.sr_ratio > 1:
             self.sr = attn.sr
             self.norm = attn.norm
