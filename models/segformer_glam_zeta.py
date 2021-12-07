@@ -383,8 +383,8 @@ class SegFormerGTZeta(nn.Module):
             for i in range(depths[3])])
         self.norm4 = mix.norm4
 
-        self.avgpool = nn.AdaptiveAvgPool1d(1)
-        self.head = nn.Linear(self.embed_dims[3], 1000)
+        self.avgpool = nn.AdaptiveAvgPool2d(2)
+        self.head = nn.Linear(self.embed_dims[3]*2*2, 1000)
 
     def forward_features(self, x):
         B = x.shape[0]
