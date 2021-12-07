@@ -383,8 +383,11 @@ class SegFormerGTZeta(nn.Module):
         B = x.shape[0]
         outs = []
 
+        print("\n\n\n--------INFO--------")
+        print(x.shape)
         # stage 1
         x, H, W = self.patch_embed1(x)
+        print(x.shape)
         gt = self.global_token1
         gt = repeat(gt, 'h w g c -> b h w g c', b=B)
         for i, blk in enumerate(self.block1):
@@ -395,6 +398,7 @@ class SegFormerGTZeta(nn.Module):
 
         # stage 2
         x, H, W = self.patch_embed2(x)
+        print(x.shape)
         gt = self.global_token2
         gt = repeat(gt, 'h w g c -> b h w g c', b=B)
         for i, blk in enumerate(self.block2):
@@ -405,6 +409,7 @@ class SegFormerGTZeta(nn.Module):
 
         # stage 3
         x, H, W = self.patch_embed3(x)
+        print(x.shape)
         gt = self.global_token3
         gt = repeat(gt, 'h w g c -> b h w g c', b=B)
         for i, blk in enumerate(self.block3):
@@ -415,6 +420,7 @@ class SegFormerGTZeta(nn.Module):
 
         # stage 4
         x, H, W = self.patch_embed4(x)
+        print(x.shape)
         gt = self.global_token4
         gt = repeat(gt, 'h w g c -> b h w g c', b=B)
         for i, blk in enumerate(self.block4):
@@ -423,6 +429,8 @@ class SegFormerGTZeta(nn.Module):
         x = x.reshape(B, H, W, -1).permute(0, 3, 1, 2).contiguous()
         outs.append(x)
 
+        print(x.shape)
+        print("--------------------\n\n\n")
         return outs
 
     def forward(self, x):
