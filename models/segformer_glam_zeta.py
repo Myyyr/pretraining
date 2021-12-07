@@ -443,7 +443,7 @@ class SegFormerGTZeta(nn.Module):
         print("\n\n\n--------------------")
         print(x[-1].shape)
 
-        x = self.avgpool(x[-1].transpose(1, 2))  # B C 1
+        x = self.avgpool(x[-1])  # B C 1
         print(x.shape)
         x = torch.flatten(x, 1)
         print(x.shape)
