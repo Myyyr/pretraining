@@ -179,9 +179,6 @@ def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mix
         outputs = model(samples)
 
         if config.TRAIN.ACCUMULATION_STEPS > 1:
-            print("\n\n\n\n\n ACC STEP", config.TRAIN.ACCUMULATION_STEPS)
-            print("\n\n\n\n\n")
-            exit(0)
             loss = criterion(outputs, targets)
             loss = loss / config.TRAIN.ACCUMULATION_STEPS
             if config.AMP_OPT_LEVEL != "O0":
@@ -341,6 +338,9 @@ if __name__ == '__main__':
     # linear_scaled_min_lr = config.TRAIN.MIN_LR * config.DATA.BATCH_SIZE / 512.0
     # gradient accumulation also need to scale the learning rate
     if config.TRAIN.ACCUMULATION_STEPS > 1:
+        # print("\n\n\n\n\n ACC STEP", config.TRAIN.ACCUMULATION_STEPS)
+        # print("\n\n\n\n\n")
+        # exit(0)
         linear_scaled_lr = linear_scaled_lr * config.TRAIN.ACCUMULATION_STEPS
         linear_scaled_warmup_lr = linear_scaled_warmup_lr * config.TRAIN.ACCUMULATION_STEPS
         linear_scaled_min_lr = linear_scaled_min_lr * config.TRAIN.ACCUMULATION_STEPS

@@ -252,7 +252,4 @@ def get_config(args):
     config = _C.clone()
     update_config(config, args)
 
-    print("\n\n\n\n\n--> PARSER",config.TRAIN.ACCUMULATION_STEPS,"\n\n\n\n\n")
-    exit(0)
-
     return config
