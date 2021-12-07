@@ -441,7 +441,7 @@ class SegFormerGTZeta(nn.Module):
     def forward(self, x):
         x = self.forward_features(x)
         print("\n\n\n--------------------")
-        print(x.shape)
+        print(x[-1].shape)
         print("--------------------\n\n\n")
 
         x = self.avgpool(x[-1].transpose(1, 2))  # B C 1
