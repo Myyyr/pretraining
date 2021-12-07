@@ -219,6 +219,8 @@ def update_config(config, args):
     if args.resume:
         config.MODEL.RESUME = args.resume
     if args.accumulation_steps:
+        print("\n\n\n\n\nPARSER",args.accumulation_steps,"\n\n\n\n\n")
+        exit(0)
         config.TRAIN.ACCUMULATION_STEPS = args.accumulation_steps
     if args.use_checkpoint:
         config.TRAIN.USE_CHECKPOINT = True
