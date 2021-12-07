@@ -436,12 +436,13 @@ class SegFormerGTZeta(nn.Module):
         x = x.reshape(B, H, W, -1).permute(0, 3, 1, 2).contiguous()
         outs.append(x)
 
-        # print(x.shape)
-        # print("--------------------\n\n\n")
         return outs
 
     def forward(self, x):
         x = self.forward_features(x)
+        print("\n\n\n--------------------")
+        print(x.shape)
+        print("--------------------\n\n\n")
 
         x = self.avgpool(x[-1].transpose(1, 2))  # B C 1
         x = torch.flatten(x, 1)
