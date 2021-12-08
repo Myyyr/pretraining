@@ -5,7 +5,7 @@
 #SBATCH --gres=gpu:4                 # number of GPUs per node
 #SBATCH --cpus-per-task=10           # number of cores per tasks
 #SBATCH --hint=nomultithread         # we get physical cores not logical
-#SBATCH --time=00:04:59              # maximum execution time (HH:MM:SS)
+#SBATCH --time=00:15:00              # maximum execution time (HH:MM:SS)
 #SBATCH --qos=qos_gpu-dev
 #SBATCH --output=logs/swin%j.out # output file name
 #SBATCH --error=logs/swin%j.err  # error file name
@@ -26,7 +26,7 @@ CONFIG="configs/swin_tiny_patch4_window7_224.yaml"
 
 
 # swin
-srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u  main.py --cfg $CONFIG --data-path $DATA --batch-size 128 --local_rank 0 --resume
+srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u  main.py --cfg $CONFIG --data-path $DATA --batch-size 128 --local_rank 0 #--resume
 # srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u  main.py --cfg $CONFIG --data-path $DATA --batch-size 32 --local_rank 0 --accumulation-steps 4 # --use-checkpoint
 # srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u -m torch.distributed.launch --nproc_per_node 8 --master_port 12345  main.py --cfg $CONFIG --data-path $DATA --batch-size 128
 # srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u tools/train.py $CONFIG --options model.pretrained=$PRET --launcher="slurm" --seed 0 --deterministic ${@:3}
