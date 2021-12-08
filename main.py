@@ -30,6 +30,9 @@ from utils import load_checkpoint, save_checkpoint, get_grad_norm, auto_resume_h
 
 from mmcv.runner import init_dist
 
+from torch.utils.tensorboard import SummaryWriter
+
+
 try:
     # noinspection PyUnresolvedReferences
     from apex import amp
@@ -83,6 +86,8 @@ def parse_option():
 def main(config):
     # init_dist("slurm")
     # config.LOCAL_RANK = torch.cuda.current_device()
+    writer = SummaryWriter(log_dir=f"model.{config.MODEL.TYPE}.{config.MODEL.NAME}")
+
 
     dataset_train, dataset_val, data_loader_train, data_loader_val, mixup_fn = build_loader(config)
 
@@ -141,10 +146,11 @@ def main(config):
 
     logger.info("Start training")
     start_time = time.time()
+    num_steps = len(data_loader_train)
     for epoch in range(config.TRAIN.START_EPOCH, config.TRAIN.EPOCHS):
         data_loader_train.sampler.set_epoch(epoch)
 
-        train_one_epoch(config, model, criterion, data_loader_train, optimizer, epoch, mixup_fn, lr_scheduler)
+        train_one_epoch(config, model, criterion, data_loader_train, optimizer, epoch, mixup_fn, lr_scheduler, writer)
         if dist.get_rank() == 0 and (epoch % config.SAVE_FREQ == 0 or epoch == (config.TRAIN.EPOCHS - 1)):
             save_checkpoint(config, epoch, model_without_ddp, max_accuracy, optimizer, lr_scheduler, logger)
 
@@ -153,12 +159,15 @@ def main(config):
         max_accuracy = max(max_accuracy, acc1)
         logger.info(f'Max accuracy: {max_accuracy:.2f}%')
 
+        writer.add_scalar("val acc", acc1, epoch * num_steps)
+        writer.add_scalar("val max acc", max_accuracy, epoch * num_steps)
+
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     logger.info('Training time {}'.format(total_time_str))
 
 
-def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mixup_fn, lr_scheduler):
+def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mixup_fn, lr_scheduler, writer):
     model.train()
     optimizer.zero_grad()
 
@@ -235,6 +244,12 @@ def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mix
                 f'loss {loss_meter.val:.4f} ({loss_meter.avg:.4f})\t'
                 f'grad_norm {norm_meter.val:.4f} ({norm_meter.avg:.4f})\t'
                 f'mem {memory_used:.0f}MB')
+
+            writer.add_scalar("train grad_norm val", norm_meter.val, epoch * num_steps + idx)
+            writer.add_scalar("train grad_norm avg", norm_meter.avg, epoch * num_steps + idx)
+            writer.add_scalar("train loss val", loss_meter.val, epoch * num_steps + idx)
+            writer.add_scalar("train loss avg", loss_meter.avg, epoch * num_steps + idx)
+
     epoch_time = time.time() - start
     logger.info(f"EPOCH {epoch} training takes {datetime.timedelta(seconds=int(epoch_time))}")
 

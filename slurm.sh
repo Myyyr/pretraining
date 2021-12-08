@@ -20,13 +20,14 @@ module load python/3.7.10
 
 
 DATA="/gpfsscratch/rech/arf/unm89rb/imagenet"
-# CONFIG="configs/swin_tiny_patch4_window7_224.yaml"
-CONFIG="configs/glam_segformer_patch4_window7_224.yaml"
+CONFIG="configs/swin_tiny_patch4_window7_224.yaml"
+# CONFIG="configs/glam_segformer_patch4_window7_224.yaml"
 
 
 
 # swin
-srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u  main.py --cfg $CONFIG --data-path $DATA --batch-size 32 --local_rank 0 --accumulation-steps 4 # --use-checkpoint
+srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u  main.py --cfg $CONFIG --data-path $DATA --batch-size 128 --local_rank 0
+# srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u  main.py --cfg $CONFIG --data-path $DATA --batch-size 32 --local_rank 0 --accumulation-steps 4 # --use-checkpoint
 # srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u -m torch.distributed.launch --nproc_per_node 8 --master_port 12345  main.py --cfg $CONFIG --data-path $DATA --batch-size 128
 # srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u tools/train.py $CONFIG --options model.pretrained=$PRET --launcher="slurm" --seed 0 --deterministic ${@:3}
 # srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u tools/train.py $CONFIG --resume-from=$RESUME --launcher="slurm" ${@:3} --seed 0 --deterministic ${@:3}
