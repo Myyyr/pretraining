@@ -86,7 +86,7 @@ def parse_option():
 def main(config):
     # init_dist("slurm")
     # config.LOCAL_RANK = torch.cuda.current_device()
-    writer = SummaryWriter(log_dir=f"model.{config.MODEL.TYPE}.{config.MODEL.NAME}")
+    writer = SummaryWriter(log_dir=f"runs/model.{config.MODEL.TYPE}.{config.MODEL.NAME}")
 
 
     dataset_train, dataset_val, data_loader_train, data_loader_val, mixup_fn = build_loader(config)
