@@ -21,7 +21,7 @@
 
 
 # jid=$(sbatch slurm.sh | cut -d ' ' -f4)
-sbatch $1
+# sbatch $1
 # echo "jid: $jid"
 
 end=`expr $2 - 1`
@@ -29,5 +29,5 @@ for k in `seq 1 $end`;
     do temp="${k}"
         # jid=$(sbatch --dependency=afterok:${jid} slurm_resume.sh ${k} | cut -d ' ' -f4)
         # jid=$(sbatch --dependency=singleton slurm.sh --resume | cut -d ' ' -f4)
-        sbatch --dependency=singleton $1 --resume
+        sbatch --dependency=singleton $1 --resume ''
     done
