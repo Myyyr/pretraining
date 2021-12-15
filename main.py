@@ -181,6 +181,7 @@ def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mix
     for idx, (samples, targets) in enumerate(data_loader):
         samples = samples.cuda(non_blocking=True)
         targets = targets.cuda(non_blocking=True)
+        t_size = targets.size(0)
 
         if mixup_fn is not None:
             samples, targets = mixup_fn(samples, targets)
@@ -189,6 +190,7 @@ def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mix
 
         if config.TRAIN.ACCUMULATION_STEPS > 1:
             loss = criterion(outputs, targets)
+            del outputs, targets
             loss = loss / config.TRAIN.ACCUMULATION_STEPS
             if config.AMP_OPT_LEVEL != "O0":
                 with amp.scale_loss(loss, optimizer) as scaled_loss:
@@ -209,6 +211,7 @@ def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mix
                 lr_scheduler.step_update(epoch * num_steps + idx)
         else:
             loss = criterion(outputs, targets)
+            del outputs, targets
             optimizer.zero_grad()
             if config.AMP_OPT_LEVEL != "O0":
                 with amp.scale_loss(loss, optimizer) as scaled_loss:
@@ -228,10 +231,11 @@ def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mix
 
         torch.cuda.synchronize()
 
-        loss_meter.update(loss.item(), targets.size(0))
+        loss_meter.update(loss.item(), t_size)
         norm_meter.update(grad_norm)
         batch_time.update(time.time() - end)
         end = time.time()
+        del loss
 
         if idx % config.PRINT_FREQ == 0:
             lr = optimizer.param_groups[0]['lr']
@@ -250,6 +254,7 @@ def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mix
             writer.add_scalar("train loss val", loss_meter.val, epoch * num_steps + idx)
             writer.add_scalar("train loss avg", loss_meter.avg, epoch * num_steps + idx)
 
+    torch.cuda.empty_cache() 
     epoch_time = time.time() - start
     logger.info(f"EPOCH {epoch} training takes {datetime.timedelta(seconds=int(epoch_time))}")
 
