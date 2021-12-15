@@ -21,8 +21,10 @@
 
 
 # jid=$(sbatch slurm.sh | cut -d ' ' -f4)
-# sbatch $1
 # echo "jid: $jid"
+
+
+sbatch $1
 
 end=`expr $2 - 1`
 for k in `seq 1 $end`;

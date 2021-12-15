@@ -11,6 +11,7 @@ from functools import partial
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 from timm.models.registry import register_model
 from timm.models.vision_transformer import _cfg
+from mmseg.models.builder import BACKBONES
 from mmseg.utils import get_root_logger
 from mmcv.runner import load_checkpoint
 import math
@@ -108,10 +109,8 @@ class ClassicAttention(nn.Module):
         """
         B_, N, C = x.shape
 
-        m = pe.shape[0]
-        strt = m//2-N//2
-        pe = pe[strt:strt+N,:]
-        x = x + pe
+        pe = rearrange(pe, 'h w g c -> (h w g) c')
+        x = x + pe[None,...]
 
         qkv = self.qkv(x).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         q, k, v = qkv[0], qkv[1], qkv[2]  # make torchscript happy (cannot use tensor as tuple)
@@ -143,7 +142,7 @@ class Attention(nn.Module):
         self.proj = attn.proj
         self.proj_drop = attn.proj_drop
 
-        self.sr_ratio = 1#attn.sr_ratio
+        self.sr_ratio = attn.sr_ratio
         if self.sr_ratio > 1:
             self.sr = attn.sr
             self.norm = attn.norm
@@ -154,37 +153,30 @@ class Attention(nn.Module):
     def forward(self, x, H, W, gt):
         B_, N_, C = x.shape
         gt_num = self.gt_num
-        skip = None
+        # skip = None
 
-        x = x.view(B_, H, W, C)
-        pad_l = pad_t = 0
-        pad_b = (self.window_size[0] - H % self.window_size[0]) % self.window_size[0]
-        pad_r = (self.window_size[1] - W % self.window_size[1]) % self.window_size[1]
-        x = F.pad(x, (0, 0, pad_l, pad_r, pad_t, pad_b))
-        _, Hp, Wp, _ = x.shape
+        # x = x.view(B_, H, W, C)
+        # pad_l = pad_t = 0
+        # pad_b = (self.window_size[0] - H % self.window_size[0]) % self.window_size[0]
+        # pad_r = (self.window_size[1] - W % self.window_size[1]) % self.window_size[1]
+        # x = F.pad(x, (0, 0, pad_l, pad_r, pad_t, pad_b))
+        # _, Hp, Wp, _ = x.shape
 
-        x_windows = window_partition(x, self.window_size)  # nW*B, window_size, window_size, C
-        x_windows = x_windows.view(-1, self.window_size[0] * self.window_size[1], C)  # nW*B, window_size*window_size, C
-        # x_windows = x
-        B, N_, C = x_windows.shape
+        # x_windows = window_partition(x, self.window_size)  # nW*B, window_size, window_size, C
+        # x_windows = x_windows.view(-1, self.window_size[0] * self.window_size[1], C)  # nW*B, window_size*window_size, C
+        # # x_windows = x
+        # B, N_, C = x_windows.shape
 
 
         if self.gt_num != 0:
-            # if len(gt.shape) != 3:
-            #     gt = repeat(gt, "g c -> b g c", b=B)# shape of (num_windows*B, G, C)
-            nHg, nWg = gt.shape[1], gt.shape[2]
-            nHp, nWp = Hp//self.window_size[0], Wp//self.window_size[1]
-            # if nHg != nHp or nWg != nWp:
-            #     gt = rearrange(nn.functional.interpolate(rearrange(gt, 'b h w g c -> b g c h w'), size=(nHp, nWp) ), 'b g c h w -> b h w g c')
-            # gt = rearrange(gt, 'b h w g c -> (b h w) g c')
-            if (len(gt.shape) > 3):
-                if (nHg != nHp or nWg != nWp):
-                    ngt=gt.shape[3]
-                    gt = rearrange(gt, 'b h w g c -> (b g) c h w')
-                    gt = nn.functional.interpolate(gt, size=(nHp, nWp))
-                    gt = rearrange(gt, '(b g) c h w -> b h w g c', g=ngt)
-                gt = rearrange(gt, 'b h w g c -> (b h w) g c')
-            skip = gt
+        #     # if len(gt.shape) != 3:
+        #     #     gt = repeat(gt, "g c -> b g c", b=B)# shape of (num_windows*B, G, C)
+        #     nHg, nWg = gt.shape[1], gt.shape[2]
+        #     nHp, nWp = Hp//self.window_size[0], Wp//self.window_size[1]
+        #     if nHg != nHp or nWg != nWp:
+        #         gt = rearrange(nn.functional.interpolate(rearrange(gt, 'b h w g c -> b g c h w'), size=(nHp, nWp) ), 'b g c h w -> b h w g c')
+        #     gt = rearrange(gt, 'b h w g c -> (b h w) g c')
+        #     skip = gt
 
             x_windows = torch.cat([gt, x_windows], dim=1)
       
@@ -223,14 +215,14 @@ class Attention(nn.Module):
         gt = x[:,:gt_num,:]
         x = x[:,gt_num:,:]
 
-        x = x.view(-1, self.window_size[0], self.window_size[1], C)
-        x = window_reverse(x, self.window_size, Hp, Wp)  # B H' W' C
+        # x = x.view(-1, self.window_size[0], self.window_size[1], C)
+        # x = window_reverse(x, self.window_size, Hp, Wp)  # B H' W' C
 
-        if pad_r > 0 or pad_b > 0:
-            x = x[:, :H, :W, :].contiguous()
-        x = x.view(B_, H * W, C)
+        # if pad_r > 0 or pad_b > 0:
+        #     x = x[:, :H, :W, :].contiguous()
+        # x = x.view(B_, H * W, C)
 
-        return x, gt, skip
+        return x, gt
 
 class Block(nn.Module):
 
@@ -260,12 +252,50 @@ class Block(nn.Module):
     def forward(self, x, H, W, gt, pe):
         
         skip = x
-        # skip_gt = gt
-
         x = self.norm1(x)
         gt = self.norm1(gt)
+        # skip_gt = None
 
-        x, gt, skip_gt = self.attn(x, H, W, gt)
+        B_, N_, C = x.shape
+        gt_num = self.gt_num
+        x = x.view(B_, H, W, C)
+        pad_l = pad_t = 0
+        pad_b = (self.window_size[0] - H % self.window_size[0]) % self.window_size[0]
+        pad_r = (self.window_size[1] - W % self.window_size[1]) % self.window_size[1]
+        x = F.pad(x, (0, 0, pad_l, pad_r, pad_t, pad_b))
+        _, Hp, Wp, _ = x.shape
+
+        x_windows = window_partition(x, self.window_size)  # nW*B, window_size, window_size, C
+        x_windows = x_windows.view(-1, self.window_size[0] * self.window_size[1], C)
+
+        if (len(gt.shape) > 3):
+            if (nHg != nHp or nWg != nWp):
+                ngt=gt.shape[3]
+                gt = rearrange(gt, 'b h w g c -> (b g) c h w')
+                gt = nn.functional.interpolate(gt, size=(nHp, nWp))
+                gt = rearrange(gt, '(b g) c h w -> b h w g c', g=ngt)
+            gt = rearrange(gt, 'b h w g c -> (b h w) g c')
+
+        nHg, nWg = pe.shape[0], pe.shape[1]
+        nHp, nWp = Hp//self.window_size, Wp//self.window_size
+        if (nHg != nHp or nWg != nWp):
+            pe = rearrange(pe, 'h w g c -> g c h w')
+            pe = nn.functional.interpolate(pe, size=(nHp, nWp))
+            pe = rearrange(pe, 'g c h w -> h w g c')
+        skip_gt = gt
+
+        
+
+        x, gt = self.attn(x, H, W, gt)
+
+        x = x.view(-1, self.window_size[0], self.window_size[1], C)
+        x = window_reverse(x, self.window_size, Hp, Wp)  # B H' W' C
+
+        if pad_r > 0 or pad_b > 0:
+            x = x[:, :H, :W, :].contiguous()
+        x = x.view(B_, H * W, C)
+
+
         B = gt.shape[0]
         # x =self.attn(x, H, W)
         x = skip + self.drop_path(x)
@@ -295,6 +325,7 @@ class Block(nn.Module):
 
 
 
+@BACKBONES.register_module()
 class SegFormerGTZeta(nn.Module):
     """docstring for SegFormerGTZeta"""
     def __init__(self, gt_num = 10):
@@ -326,8 +357,6 @@ class SegFormerGTZeta(nn.Module):
         self.global_token4 = torch.nn.Parameter(torch.randn(ngt//(2**3),ngt//(2**3),gt_num,self.embed_dims[3]))
         self.pe4 = nn.Parameter(torch.zeros(ws_pe[0]*ws_pe[1], self.embed_dims[3]))
         trunc_normal_(self.pe4, std=.02)
-
-        self.init_weights()
 
 
 
@@ -390,11 +419,8 @@ class SegFormerGTZeta(nn.Module):
         B = x.shape[0]
         outs = []
 
-        # print("\n\n\n--------INFO--------")
-        # print(x.shape)
         # stage 1
         x, H, W = self.patch_embed1(x)
-        # print(x.shape)
         gt = self.global_token1
         gt = repeat(gt, 'h w g c -> b h w g c', b=B)
         for i, blk in enumerate(self.block1):
@@ -405,7 +431,6 @@ class SegFormerGTZeta(nn.Module):
 
         # stage 2
         x, H, W = self.patch_embed2(x)
-        # print(x.shape)
         gt = self.global_token2
         gt = repeat(gt, 'h w g c -> b h w g c', b=B)
         for i, blk in enumerate(self.block2):
@@ -416,7 +441,6 @@ class SegFormerGTZeta(nn.Module):
 
         # stage 3
         x, H, W = self.patch_embed3(x)
-        # print(x.shape)
         gt = self.global_token3
         gt = repeat(gt, 'h w g c -> b h w g c', b=B)
         for i, blk in enumerate(self.block3):
@@ -427,7 +451,6 @@ class SegFormerGTZeta(nn.Module):
 
         # stage 4
         x, H, W = self.patch_embed4(x)
-        # print(x.shape)
         gt = self.global_token4
         gt = repeat(gt, 'h w g c -> b h w g c', b=B)
         for i, blk in enumerate(self.block4):
@@ -440,6 +463,7 @@ class SegFormerGTZeta(nn.Module):
 
     def forward(self, x):
         x = self.forward_features(x)
+        # x = self.head(x)
 
         x = self.avgpool(x[-1])  # B C 1
         x = torch.flatten(x, 1)
