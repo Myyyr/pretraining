@@ -87,6 +87,21 @@ _C.MODEL.SWIN_MLP.PATCH_NORM = True
 _C.MODEL.GLAM = CN()
 _C.MODEL.GLAM.GT_NUM = 1
 
+# Glam Swin Transformer parameters
+_C.MODEL.GLAMSWIN = CN()
+_C.MODEL.GLAMSWIN.PATCH_SIZE = 4
+_C.MODEL.GLAMSWIN.IN_CHANS = 3
+_C.MODEL.GLAMSWIN.EMBED_DIM = 96
+_C.MODEL.GLAMSWIN.DEPTHS = [2, 2, 6, 2]
+_C.MODEL.GLAMSWIN.NUM_HEADS = [3, 6, 12, 24]
+_C.MODEL.GLAMSWIN.WINDOW_SIZE = 7
+_C.MODEL.GLAMSWIN.MLP_RATIO = 4.
+_C.MODEL.GLAMSWIN.QKV_BIAS = True
+_C.MODEL.GLAMSWIN.QK_SCALE = None
+_C.MODEL.GLAMSWIN.APE = False
+_C.MODEL.GLAMSWIN.PATCH_NORM = True
+_C.MODEL.GLAMSWIN.GT_NUM = 1
+
 # -----------------------------------------------------------------------------
 # Training settings
 # -----------------------------------------------------------------------------

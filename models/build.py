@@ -7,7 +7,9 @@
 
 from .swin_transformer import SwinTransformer
 from .swin_mlp import SwinMLP
+
 from .segformer_glam_zeta import SegFormerGTZeta
+from .glam_swin_transformer import GlamSwinTransformer
 
 
 def build_model(config):
@@ -46,6 +48,8 @@ def build_model(config):
                         use_checkpoint=config.TRAIN.USE_CHECKPOINT)
     elif model_type == 'glam_segformer':
         model = SegFormerGTZeta(gt_num=config.MODEL.GLAM.GT_NUM)
+    elif model_type == 'glam_swin':
+        model = GlamSwinTransformer(gt_num=config.MODEL.GLAMSWIN.GT_NUM)
     else:
         raise NotImplementedError(f"Unkown model: {model_type}")
 
