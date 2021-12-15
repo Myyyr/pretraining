@@ -9,6 +9,7 @@
 #SBATCH --qos=qos_gpu-dev
 #SBATCH --output=logs/glamsegformer%j.out # output file name
 #SBATCH --error=logs/glamsegformer%j.err  # error file name
+#SBATCH -C v100-32g
 
 set -x
 
@@ -26,7 +27,8 @@ CONFIG="configs/glam_segformer_patch4_window7_224.yaml"
 
 # swin
 # srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u  main.py --cfg $CONFIG --data-path $DATA --batch-size 128 --local_rank 0 $1 $2
-srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u  main.py --cfg $CONFIG --data-path $DATA --batch-size 64 --local_rank 0 --accumulation-steps 2 --use-checkpoint $1 $2
+srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u  main.py --cfg $CONFIG --data-path $DATA --batch-size 64 --local_rank 0 --accumulation-steps 2 $1 $2
+# srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u  main.py --cfg $CONFIG --data-path $DATA --batch-size 64 --local_rank 0 --accumulation-steps 2 --use-checkpoint $1 $2
 
 
 # srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u  main.py --cfg $CONFIG --data-path $DATA --batch-size 32 --local_rank 0 --accumulation-steps 4 # --use-checkpoint
