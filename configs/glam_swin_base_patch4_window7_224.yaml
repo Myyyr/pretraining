@@ -8,3 +8,5 @@ MODEL:
     NUM_HEADS: [ 4, 8, 16, 32 ]
     WINDOW_SIZE: 7
     GT_NUM: 10
+
+# 10gt : 30min par epoch
