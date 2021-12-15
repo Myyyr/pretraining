@@ -325,7 +325,7 @@ class Block(nn.Module):
 
 
 
-@BACKBONES.register_module()
+# @BACKBONES.register_module()
 class SegFormerGTZeta(nn.Module):
     """docstring for SegFormerGTZeta"""
     def __init__(self, gt_num = 10):

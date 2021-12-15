@@ -1,14 +1,14 @@
 #!/bin/bash
-#SBATCH --job-name=swin     # job name
+#SBATCH --job-name=glamsegformer     # job name
 #SBATCH --ntasks=8                  # number of MP tasks
 #SBATCH --ntasks-per-node=4          # number of MPI tasks per node
 #SBATCH --gres=gpu:4                 # number of GPUs per node
 #SBATCH --cpus-per-task=10           # number of cores per tasks
 #SBATCH --hint=nomultithread         # we get physical cores not logical
-#SBATCH --time=00:02:30              # maximum execution time (HH:MM:SS)
+#SBATCH --time=00:05:30              # maximum execution time (HH:MM:SS)
 #SBATCH --qos=qos_gpu-dev
-#SBATCH --output=logs/swin%j.out # output file name
-#SBATCH --error=logs/swin%j.err  # error file name
+#SBATCH --output=logs/glamsegformer%j.out # output file name
+#SBATCH --error=logs/glamsegformer%j.err  # error file name
 
 set -x
 
