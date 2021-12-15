@@ -2,4 +2,4 @@ MODEL:
   TYPE: glam_segformer
   NAME: glam_segformer_zeta_g1
   GLAM:
-    GT_NUM: 1
+    GT_NUM: 10

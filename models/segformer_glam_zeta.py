@@ -378,6 +378,8 @@ class SegFormerGTZeta(nn.Module):
         self.pe4 = nn.Parameter(torch.zeros(ngt//(2**0),ngt//(2**0),gt_num, self.embed_dims[3]))
         trunc_normal_(self.pe4, std=.02)
 
+        self.init_weights()
+
 
 
     def init_weights(self, pretrained=None):
@@ -431,6 +433,8 @@ class SegFormerGTZeta(nn.Module):
                                            window_size=(8,8), do_gmsa=do_gmsa[i])
             for i in range(depths[3])])
         self.norm4 = mix.norm4
+
+
 
         self.avgpool = nn.AdaptiveAvgPool2d(1)
         self.head = nn.Linear(self.embed_dims[3], 1000)
