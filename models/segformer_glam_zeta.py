@@ -236,6 +236,7 @@ class Block(nn.Module):
         self.mlp = block.mlp
         self.gt_num = gt_num
         self.do_gmsa = do_gmsa
+        self.window_size = window_size
 
         if do_gmsa:
             mlp_hidden_dim = int(mlp_ratio*dim)
