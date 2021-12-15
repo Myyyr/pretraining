@@ -150,10 +150,15 @@ class Attention(nn.Module):
         self.gt_num = gt_num
         self.window_size = window_size
 
-    def forward(self, x, H, W, gt):
-        B_, N_, C = x.shape
+    def forward(self, x_windows, H, W, gt):
+        # print("\n\n\n\n------------------")
+        # print("x", x.shape)
+        # print("------------------\n\n\n\n")
+        # B_, N_, C = x_windows.shape
         gt_num = self.gt_num
         # skip = None
+
+
 
         # x = x.view(B_, H, W, C)
         # pad_l = pad_t = 0
@@ -165,7 +170,7 @@ class Attention(nn.Module):
         # x_windows = window_partition(x, self.window_size)  # nW*B, window_size, window_size, C
         # x_windows = x_windows.view(-1, self.window_size[0] * self.window_size[1], C)  # nW*B, window_size*window_size, C
         # # x_windows = x
-        # B, N_, C = x_windows.shape
+        B, N_, C = x_windows.shape
 
 
         if self.gt_num != 0:
@@ -199,7 +204,7 @@ class Attention(nn.Module):
             kv = self.kv(x_).reshape(B, -1, 2, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
 
         else:
-            kv = self.kv(x).reshape(B, -1, 2, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+            kv = self.kv(x_windows).reshape(B, -1, 2, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         # kv = self.kv(x_windows).reshape(B, -1, 2, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         k, v = kv[0], kv[1]
 
@@ -269,8 +274,14 @@ class Block(nn.Module):
         x_windows = window_partition(x, self.window_size)  # nW*B, window_size, window_size, C
         x_windows = x_windows.view(-1, self.window_size[0] * self.window_size[1], C)
 
+        nHg, nWg = gt.shape[1], gt.shape[2]
+        nHp, nWp = Hp//self.window_size[0], Wp//self.window_size[1]
+
+        # print("\n\n\n\n------------------")
         if (len(gt.shape) > 3):
+            # print("here 0")
             if (nHg != nHp or nWg != nWp):
+                # print("here 1")
                 ngt=gt.shape[3]
                 gt = rearrange(gt, 'b h w g c -> (b g) c h w')
                 gt = nn.functional.interpolate(gt, size=(nHp, nWp))
@@ -278,16 +289,22 @@ class Block(nn.Module):
             gt = rearrange(gt, 'b h w g c -> (b h w) g c')
 
         nHg, nWg = pe.shape[0], pe.shape[1]
-        nHp, nWp = Hp//self.window_size, Wp//self.window_size
+        nHp, nWp = Hp//self.window_size[0], Wp//self.window_size[1]
         if (nHg != nHp or nWg != nWp):
+            # print("here 2")
             pe = rearrange(pe, 'h w g c -> g c h w')
             pe = nn.functional.interpolate(pe, size=(nHp, nWp))
             pe = rearrange(pe, 'g c h w -> h w g c')
+
+        # print("gt", gt.shape)
+        # print("pe", pe.shape)
+        # print("------------------\n\n\n\n")
+        # exit(0)
         skip_gt = gt
 
         
 
-        x, gt = self.attn(x, H, W, gt)
+        x, gt = self.attn(x_windows, H, W, gt)
 
         x = x.view(-1, self.window_size[0], self.window_size[1], C)
         x = window_reverse(x, self.window_size, Hp, Wp)  # B H' W' C
@@ -313,7 +330,9 @@ class Block(nn.Module):
             # do g msa
             B, ngt, c = gt.shape
             nw = B//x.shape[0]
+            # print("gt", gt.shape)
             gt =rearrange(gt, "(b n) g c -> b (n g) c", n=nw)
+            # print("gt", gt.shape)
 
             gt = gt + self.drop_path(self.gt_attn(self.gt_norm1(gt), pe))
             gt = gt + self.drop_path(self.gt_mlp2(self.gt_norm2(gt)))
@@ -339,27 +358,25 @@ class SegFormerGTZeta(nn.Module):
 
         ngt = 16 # 512//(4*8)
 
-        ws_pe = (40*gt_num//(2**0), 40*gt_num//(2**0))
+        # ws_pe = (40*gt_num//(2**0), 40*gt_num//(2**0))
         self.global_token1 = torch.nn.Parameter(torch.randn(ngt//(2**0),ngt//(2**0),gt_num,self.embed_dims[0]))
-        self.pe1 = nn.Parameter(torch.zeros(ws_pe[0]*ws_pe[1], self.embed_dims[0]))
+        self.pe1 = nn.Parameter(torch.zeros(ngt//(2**0),ngt//(2**0),gt_num, self.embed_dims[0]))
         trunc_normal_(self.pe1, std=.02)
 
-        ws_pe = (40*gt_num//(2**1), 40*gt_num//(2**1))
+        # ws_pe = (40*gt_num//(2**1), 40*gt_num//(2**1))
         self.global_token2 = torch.nn.Parameter(torch.randn(ngt//(2**1),ngt//(2**1),gt_num,self.embed_dims[1]))
-        self.pe2 = nn.Parameter(torch.zeros(ws_pe[0]*ws_pe[1], self.embed_dims[1]))
+        self.pe2 = nn.Parameter(torch.zeros(ngt//(2**0),ngt//(2**0),gt_num, self.embed_dims[1]))
         trunc_normal_(self.pe2, std=.02)
 
-        ws_pe = (40*gt_num//(2**2), 40*gt_num//(2**2))
+        # ws_pe = (40*gt_num//(2**2), 40*gt_num//(2**2))
         self.global_token3 = torch.nn.Parameter(torch.randn(ngt//(2**2),ngt//(2**2),gt_num,self.embed_dims[2]))
-        self.pe3 = nn.Parameter(torch.zeros(ws_pe[0]*ws_pe[1], self.embed_dims[2]))
+        self.pe3 = nn.Parameter(torch.zeros(ngt//(2**0),ngt//(2**0),gt_num, self.embed_dims[2]))
         trunc_normal_(self.pe3, std=.02)
 
-        ws_pe = (40*gt_num//(2**3), 40*gt_num//(2**3))
+        # ws_pe = (40*gt_num//(2**3), 40*gt_num//(2**3))
         self.global_token4 = torch.nn.Parameter(torch.randn(ngt//(2**3),ngt//(2**3),gt_num,self.embed_dims[3]))
-        self.pe4 = nn.Parameter(torch.zeros(ws_pe[0]*ws_pe[1], self.embed_dims[3]))
+        self.pe4 = nn.Parameter(torch.zeros(ngt//(2**0),ngt//(2**0),gt_num, self.embed_dims[3]))
         trunc_normal_(self.pe4, std=.02)
-
-        self.init_weights()
 
 
 
