@@ -1,5 +1,8 @@
 MODEL:
   TYPE: glam_segformer
-  NAME: glam_segformer_zeta_g1
+  NAME: glam_segformer_zeta_g10
   GLAM:
     GT_NUM: 10
+
+
+# 10gt : ~1h par epoch
