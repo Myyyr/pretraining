@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=glamsegformer     # job name
+#SBATCH --job-name=dbg_glamsegformer     # job name
 #SBATCH --ntasks=8                  # number of MP tasks
 #SBATCH --ntasks-per-node=4          # number of MPI tasks per node
 #SBATCH --gres=gpu:4                 # number of GPUs per node
@@ -7,8 +7,8 @@
 #SBATCH --hint=nomultithread         # we get physical cores not logical
 #SBATCH --time=00:05:59              # maximum execution time (HH:MM:SS)
 #SBATCH --qos=qos_gpu-dev
-#SBATCH --output=logs/glamsegformer%j.out # output file name
-#SBATCH --error=logs/glamsegformer%j.err  # error file name
+#SBATCH --output=logs/dbg_glamsegformer%j.out # output file name
+#SBATCH --error=logs/dbg_glamsegformer%j.err  # error file name
 
 
 # # #   SBATCH -C v100-32g
