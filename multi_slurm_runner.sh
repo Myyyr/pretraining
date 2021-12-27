@@ -25,8 +25,10 @@
 
 
 # sbatch $1
+# end=`expr $2 - 1`
 
-end=`expr $2 - 1`
+end=`expr $2`
+
 for k in `seq 1 $end`;
     do temp="${k}"
         # jid=$(sbatch --dependency=afterok:${jid} slurm_resume.sh ${k} | cut -d ' ' -f4)
