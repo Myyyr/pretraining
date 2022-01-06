@@ -190,7 +190,6 @@ def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mix
 
         if config.TRAIN.ACCUMULATION_STEPS > 1:
             loss = criterion(outputs, targets)
-            del outputs, targets
             loss = loss / config.TRAIN.ACCUMULATION_STEPS
             if config.AMP_OPT_LEVEL != "O0":
                 with amp.scale_loss(loss, optimizer) as scaled_loss:
