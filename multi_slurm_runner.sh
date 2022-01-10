@@ -24,10 +24,10 @@
 # echo "jid: $jid"
 
 
-# sbatch $1
-# end=`expr $2 - 1`
+sbatch $1
+end=`expr $2 - 1`
 
-end=`expr $2`
+# end=`expr $2`
 
 for k in `seq 1 $end`;
     do temp="${k}"
