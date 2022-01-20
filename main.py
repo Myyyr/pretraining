@@ -248,6 +248,7 @@ def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mix
                 f'grad_norm {norm_meter.val:.4f} ({norm_meter.avg:.4f})\t'
                 f'mem {memory_used:.0f}MB')
 
+            writer.add_scalar("lr", lr, epoch * num_steps + idx)
             writer.add_scalar("train grad_norm val", norm_meter.val, epoch * num_steps + idx)
             writer.add_scalar("train grad_norm avg", norm_meter.avg, epoch * num_steps + idx)
             writer.add_scalar("train loss val", loss_meter.val, epoch * num_steps + idx)
