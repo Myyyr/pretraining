@@ -30,4 +30,5 @@ DATA="/gpfsscratch/rech/arf/unm89rb/imagenet"
 
 
 CONFIG="configs/glam_swin_base_patch4_window7_224_lr01.yaml"
-srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u  main.py --cfg $CONFIG --data-path $DATA --batch-size 128 --local_rank 0 --use-checkpoint $1 $2 
+# srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u  main.py --cfg $CONFIG --data-path $DATA --batch-size 128 --local_rank 0 --use-checkpoint $1 $2 
+srun /gpfslocalsup/pub/idrtools/bind_gpu.sh python -u  main.py --cfg $CONFIG --data-path $DATA --batch-size 128 --local_rank 0 --use-checkpoint $1 $2 --resume auto
