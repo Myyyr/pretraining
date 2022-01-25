@@ -1,6 +1,6 @@
 MODEL:
   TYPE: glam_swin
-  NAME: glam_swin_base_patch4_window7_224_001
+  NAME: glam_swin_base_patch4_window7_224_0005
   DROP_PATH_RATE: 0.5
   GLAMSWIN:
     EMBED_DIM: 128
