@@ -1,0 +1,15 @@
+MODEL:
+  TYPE: glam_swin
+  NAME: glam_swin_base_patch4_window7_224_001
+  DROP_PATH_RATE: 0.5
+  GLAMSWIN:
+    EMBED_DIM: 128
+    DEPTHS: [ 2, 2, 18, 2 ]
+    NUM_HEADS: [ 4, 8, 16, 32 ]
+    WINDOW_SIZE: 7
+    GT_NUM: 10
+TRAIN:
+  BASE_LR: 0.0005 # lr --> 0.0005 (default : 0.001)
+# 10gt : 30min par epoch
+# on v100-32g
+# no grad accumulation
